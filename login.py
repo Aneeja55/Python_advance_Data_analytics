@@ -1,63 +1,65 @@
-User_database=[]
-keys=[]
-i=0
+User_database={}
 with open("database.csv","r") as f:
     data=f.readlines()
-    headers=data[0].strip().split(",")
-    for line in data[1:]:
-        values=line.strip().split(",")
-        row_dict={}
-        for i, header in enumerate(headers):
-            row_dict[header]=values[i]
-        User_database.append(row_dict)
+headers=data[0].strip().split(",")
+User_database ={h: [] for h in headers}
+for line in data[1:]:
+    values=line.strip().split(",")
+    for key, value in zip(headers,values):
+        User_database[key].append(value)
+print(User_database)
+
+
 
 def write_to_file():
     with open("database.csv", "w") as f:
         f.write(",".join(headers) + "\n")
-        for user in User_database:
-            f.write(f"{user['Name']},{user['Password']},{user['Status']}\n")
+        for i in range(len(User_database["Name"])):
+            f.write(f"{User_database['Name'][i]},{User_database['Password'][i]},{User_database['Status'][i]}\n")
             
 def login(name):
-    for user in User_database:
-        if user["Name"]==name:
-            if user["Status"]=="1":
-                print("User already logged in.")
-                return False
-            try:
-                password=input("Enter your password: ")
-            except ValueError:
-                print("Error reading password.")
-                return False
+    if name in User_database["Name"]:
+        index=User_database["Name"].index(name)
+        if User_database["Status"][index]=="1":
+            print("User already logged in.")
+            return False
+        try:
+            password=input("Enter your password: ")
+        except ValueError:
+            print("Error reading password.")
+            return False
+        else:
+            if User_database["Password"][index]==password:
+                User_database["Status"][index]="1"
+                write_to_file()
+                return True
             else:
-                if user["Password"]==password:
-                    user["Status"] = "1"
-                    write_to_file()
-                    return True
-                else:
-                    print("Invalid password.")
-                    return False
+                print("Invalid password.")
+                return False
     else:
         print("Name not found")
         return False
     
 def logout(name):
-    for user in User_database:
-        if user["Name"]==name:
-            if user["Status"]=="0":
-                print("User already Logged out.")
-                return False
-            else:
-                user["Status"]="0"
-                write_to_file()
-                return True
+    if name in User_database["Name"]:
+        index=User_database["Name"].index(name)
+        if User_database["Status"][index]=="0":
+            print("User already logged out.")
+            return False
+        else:
+            User_database["Status"][index]="0"
+            write_to_file()
+            return True
+    else:
+        print("Name not found")
+        return False
             
 def register():
     try:
         name=input("Enter your name: ")
-        for user in User_database:
-            if user["Name"]==name:
-                print("User already exists.")
-                return False
+        if name in User_database["Name"]:
+            print("User already exists.")
+            return False
     except TypeError:
         print("Error reading input.")
         return False
@@ -68,7 +70,9 @@ def register():
             print("Error reading input.")
             return False
         else:
-            User_database.append({"Name": name, "Password": password, "Status": "0"})
+            User_database["Name"].append(name)
+            User_database["Password"].append(password)
+            User_database["Status"].append("0")
             write_to_file()
             return True
 
